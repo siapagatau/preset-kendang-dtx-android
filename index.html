@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preset Kendang DTX Android</title>
+<style>
+  :root {
+    --bg: #1c1c1e;
+    --panel: #2b2b2e;
+    --row: #232325;
+    --accent: #e2452c;
+    --text: #f0f0f0;
+    --dim: #9a9a9e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .sub { color: var(--dim); font-size: 0.9rem; margin-bottom: 24px; }
+  .card {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 8px;
+  }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--row);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .item:last-child { margin-bottom: 0; }
+  .item:active { opacity: 0.7; }
+  .icon {
+    flex-shrink: 0;
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .info { flex: 1; min-width: 0; }
+  .name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { color: var(--dim); font-size: 0.78rem; margin-top: 2px; }
+  .dl { color: var(--dim); font-size: 0.78rem; }
+  .state { text-align: center; color: var(--dim); padding: 30px 0; font-size: 0.9rem; }
+  .footer { text-align: center; color: var(--dim); font-size: 0.75rem; margin-top: 24px; line-height: 1.5; }
+  code { background: var(--row); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🥁 Preset Kendang - APK DTX Android</h1>
+    <div class="sub">Daftar preset (.zip) yang tersedia di repo ini. Buka apk DTX-nya, tekan <b>LOAD → Online dari GitHub</b>, lalu pilih preset. Halaman ini juga bisa dipakai buat download manual.</div>
+    <div class="card">
+      <div id="list" class="state">Memuat daftar preset...</div>
+    </div>
+    <div class="footer">
+      Halaman ini otomatis mengambil daftar file langsung dari isi repo GitHub<br>
+      (<code>siapagatau/preset-kendang-dtx-android</code>) setiap dibuka — jadi begitu ada preset baru
+      di-upload ke repo, langsung muncul di sini tanpa perlu edit halaman ini lagi.
+    </div>
+  </div>
+
+<script>
+const OWNER = "siapagatau";
+const REPO = "preset-kendang-dtx-android";
+const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+
+function formatSize(bytes) {
+  if (!bytes) return "";
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
+async function loadList() {
+  const listEl = document.getElementById("list");
+  try {
+    const res = await fetch(API_URL, { headers: { "Accept": "application/vnd.github+json" } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const zips = data
+      .filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".zip"))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (zips.length === 0) {
+      listEl.className = "state";
+      listEl.textContent = "Belum ada file .zip preset di repo ini.";
+      return;
+    }
+
+    listEl.className = "";
+    listEl.innerHTML = "";
+    for (const f of zips) {
+      const a = document.createElement("a");
+      a.className = "item";
+      a.href = f.download_url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.innerHTML = `
+        <div class="icon">🎵</div>
+        <div class="info">
+          <div class="name">${f.name.replace(/\.zip$/i, "")}</div>
+          <div class="meta">${formatSize(f.size)}</div>
+        </div>
+        <div class="dl">⬇</div>
+      `;
+      listEl.appendChild(a);
+    }
+  } catch (err) {
+    listEl.className = "state";
+    listEl.textContent = "Gagal memuat daftar preset. Cek koneksi internet lalu refresh halaman ini.";
+    console.error(err);
+  }
+}
+
+loadList();
+</script>
+</body>
+</html>
